@@ -28,7 +28,12 @@ import {
   ConversationScrollButton,
   ConversationTopFade,
 } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
+
+import {
+  Message,
+  MessageContent,
+} from "@/components/ai-elements/message";
+
 import {
   PromptInput,
   PromptInputButton,
@@ -37,13 +42,16 @@ import {
   PromptInputTextarea,
   usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
+
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
+
 import {
   calculateWaitingHours,
   grievances,
   isOverdue,
 } from "../../agent/lib/grievance-data";
+
 import { cn } from "@/lib/utils";
 import { AgentMessage } from "./agent-message";
 
@@ -101,10 +109,17 @@ export function AgentChat({
   readonly sessionId?: string;
   readonly sessionless?: boolean;
 }) {
-  const [cancellationError, setCancellationError] = useState<string>();
-  const [hasInputText, setHasInputText] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("assistant");
+  const [cancellationError, setCancellationError] =
+    useState<string>();
+
+  const [hasInputText, setHasInputText] =
+    useState(false);
+
+  const [mobileNavOpen, setMobileNavOpen] =
+    useState(false);
+
+  const [viewMode, setViewMode] =
+    useState<ViewMode>("assistant");
 
   const agent = useEveAgent({
     initialSession:
@@ -114,29 +129,44 @@ export function AgentChat({
             sessionId,
             streamIndex: 0,
           },
+
     resume: sessionId !== undefined,
+
     onSessionChange(session) {
-      if (sessionId === undefined && session !== undefined) {
+      if (
+        sessionId === undefined &&
+        session !== undefined
+      ) {
         History.prototype.replaceState.call(
           window.history,
           window.history.state,
           "",
-          `/s/${encodeURIComponent(session.sessionId)}`,
+          `/s/${encodeURIComponent(
+            session.sessionId,
+          )}`,
         );
       }
     },
   });
 
   const isBusy =
-    agent.status === "submitted" || agent.status === "streaming";
+    agent.status === "submitted" ||
+    agent.status === "streaming";
 
-  const isResuming = agent.status === "resuming";
-  const isEmpty = agent.data.messages.length === 0;
-  const lastMessage = agent.data.messages.at(-1);
+  const isResuming =
+    agent.status === "resuming";
+
+  const isEmpty =
+    agent.data.messages.length === 0;
+
+  const lastMessage =
+    agent.data.messages.at(-1);
 
   const isPendingAssistantShell =
     lastMessage?.role === "assistant" &&
-    lastMessage.parts.every((part) => part.type === "step-start");
+    lastMessage.parts.every(
+      (part) => part.type === "step-start",
+    );
 
   const showPendingThinking =
     isBusy &&
@@ -150,10 +180,14 @@ export function AgentChat({
       : getLatestTurnFailure(agent.events);
 
   const errorMessage =
-    cancellationError ?? agent.error?.message ?? turnFailure;
+    cancellationError ??
+    agent.error?.message ??
+    turnFailure;
 
   const hasConversationContent =
-    sessionless || !isEmpty || errorMessage !== undefined;
+    sessionless ||
+    !isEmpty ||
+    errorMessage !== undefined;
 
   const showConversationLayout =
     isResuming || hasConversationContent;
@@ -169,15 +203,16 @@ export function AgentChat({
           {
             studentId: item.studentId,
             studentName: item.studentName,
-            grievances: 0,
-            open: 0,
           },
         ]),
       ).values(),
     ).map((student) => {
-      const studentCases = grievances.filter(
-        (item) => item.studentId === student.studentId,
-      );
+      const studentCases =
+        grievances.filter(
+          (item) =>
+            item.studentId ===
+            student.studentId,
+        );
 
       return {
         ...student,
@@ -208,82 +243,25 @@ export function AgentChat({
   );
 
   const analytics = useMemo(() => {
-    const openCases = grievances.filter(
-      (item) =>
-        item.status !== "Resolved" &&
-        item.status !== "Closed",
+    return createAnalytics(
+      overdueCases.length,
+      escalations.length,
     );
-
-    const resolvedCases = grievances.filter(
-      (item) =>
-        item.status === "Resolved" ||
-        item.status === "Closed",
-    );
-
-    const departmentMap = new Map<
-      string,
-      {
-        department: string;
-        complaints: number;
-        open: number;
-        resolved: number;
-      }
-    >();
-
-    for (const item of grievances) {
-      const existing = departmentMap.get(item.department) ?? {
-        department: item.department,
-        complaints: 0,
-        open: 0,
-        resolved: 0,
-      };
-
-      existing.complaints += 1;
-
-      if (
-        item.status === "Resolved" ||
-        item.status === "Closed"
-      ) {
-        existing.resolved += 1;
-      } else {
-        existing.open += 1;
-      }
-
-      departmentMap.set(item.department, existing);
-    }
-
-    const departments = Array.from(
-      departmentMap.values(),
-    ).sort((a, b) => b.complaints - a.complaints);
-
-    const averageResolutionHours =
-      resolvedCases.length === 0
-        ? 0
-        : Math.round(
-            resolvedCases.reduce(
-              (sum, item) =>
-                sum + calculateWaitingHours(item),
-              0,
-            ) / resolvedCases.length,
-          );
-
-    return {
-      total: grievances.length,
-      open: openCases.length,
-      resolved: resolvedCases.length,
-      overdue: overdueCases.length,
-      escalations: escalations.length,
-      averageResolutionHours,
-      departments,
-    };
-  }, [escalations.length, overdueCases.length]);
+  }, [
+    overdueCases.length,
+    escalations.length,
+  ]);
 
   const requestCancellation = () => {
     setCancellationError(undefined);
 
-    void agent.cancel().catch((error: unknown) => {
-      setCancellationError(toErrorMessage(error));
-    });
+    void agent.cancel().catch(
+      (error: unknown) => {
+        setCancellationError(
+          toErrorMessage(error),
+        );
+      },
+    );
   };
 
   const handleSubmit = async (
@@ -333,40 +311,58 @@ export function AgentChat({
     await agent.send(parts, options);
   };
 
-  const sendSuggestedPrompt = async (prompt: string) => {
-    if (isResuming) return;
+  const sendPrompt = (
+    prompt: string,
+  ) => {
+    if (isResuming) {
+      return;
+    }
 
     setViewMode("assistant");
-    setCancellationError(undefined);
+    setCancellationError(
+      undefined,
+    );
 
     const options = isBusy
       ? { turnPolicy: "steer" as const }
       : undefined;
 
-    await agent.send(prompt, options);
+    void agent.send(prompt, options);
   };
 
-  const openGrievance = async (grievanceId: string) => {
+  const openGrievance = (
+    grievanceId: string,
+  ) => {
     setViewMode("assistant");
-    setCancellationError(undefined);
+    setCancellationError(
+      undefined,
+    );
 
-    const prompt = `Investigate grievance ${grievanceId}. Give me its current status, priority, department, SLA status, waiting time, relevant history, and recommended next step.`;
+    const prompt =
+      `Investigate grievance ${grievanceId}. ` +
+      `Give me its current status, priority, ` +
+      `department, SLA status, waiting time, ` +
+      `relevant history, and recommended next step.`;
 
     const options = isBusy
       ? { turnPolicy: "steer" as const }
       : undefined;
 
-    await agent.send(prompt, options);
+    void agent.send(prompt, options);
   };
 
   const composer = (
     <div className="rounded-[22px] border border-[#ddd7ce] bg-white p-2 shadow-[0_12px_36px_rgba(34,29,40,0.09)]">
-      <PromptInput onSubmit={handleSubmit}>
+      <PromptInput
+        onSubmit={handleSubmit}
+      >
         <PromptInputTextarea
           disabled={isResuming}
           onChange={(event) =>
             setHasInputText(
-              event.currentTarget.value.trim().length > 0,
+              event.currentTarget.value
+                .trim()
+                .length > 0,
             )
           }
           placeholder="Ask Resolvia to investigate a grievance, check an SLA, find the right department..."
@@ -380,9 +376,13 @@ export function AgentChat({
               AI decision engine ready
             </div>
 
-            <span className="text-[#d7d0c7]">•</span>
+            <span className="text-[#d7d0c7]">
+              •
+            </span>
 
-            <span>Evidence-based analysis</span>
+            <span>
+              Evidence-based analysis
+            </span>
           </div>
 
           <ComposerAction
@@ -401,7 +401,9 @@ export function AgentChat({
       <Sidebar
         activeView={viewMode}
         mobileOpen={mobileNavOpen}
-        onClose={() => setMobileNavOpen(false)}
+        onClose={() =>
+          setMobileNavOpen(false)
+        }
         onViewChange={(view) => {
           setViewMode(view);
           setMobileNavOpen(false);
@@ -411,20 +413,28 @@ export function AgentChat({
       <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar
           activeView={viewMode}
-          canStartNewChat={activeSessionId !== undefined}
-          onOpenNav={() => setMobileNavOpen(true)}
+          canStartNewChat={
+            activeSessionId !== undefined
+          }
+          onOpenNav={() =>
+            setMobileNavOpen(true)
+          }
           onViewChange={setViewMode}
         />
 
         {viewMode === "overview" ? (
           <Overview
             analytics={analytics}
-            onOpenAssistant={() => setViewMode("assistant")}
-            onOpenGrievances={() => setViewMode("grievances")}
+            onOpenAssistant={() =>
+              setViewMode("assistant")
+            }
+            onOpenGrievances={() =>
+              setViewMode("grievances")
+            }
             onOpenEscalations={() =>
               setViewMode("escalations")
             }
-            onSendPrompt={sendSuggestedPrompt}
+            onSendPrompt={sendPrompt}
           />
         ) : null}
 
@@ -444,13 +454,17 @@ export function AgentChat({
             errorMessage={errorMessage}
             agent={agent}
             sessionId={sessionId}
-            activeSessionId={activeSessionId}
+            activeSessionId={
+              activeSessionId
+            }
             isBusy={isBusy}
             isResuming={isResuming}
             onCancellationReset={() =>
-              setCancellationError(undefined)
+              setCancellationError(
+                undefined,
+              )
             }
-            onSendPrompt={sendSuggestedPrompt}
+            onSendPrompt={sendPrompt}
           />
         ) : null}
 
@@ -459,26 +473,34 @@ export function AgentChat({
             onOpenAssistant={() =>
               setViewMode("assistant")
             }
-            onOpenGrievance={openGrievance}
+            onOpenGrievance={
+              openGrievance
+            }
           />
         ) : null}
 
         {viewMode === "students" ? (
           <StudentsView
             students={students}
-            onOpenGrievance={openGrievance}
+            onOpenGrievance={
+              openGrievance
+            }
           />
         ) : null}
 
         {viewMode === "escalations" ? (
           <EscalationsView
             cases={escalations}
-            onOpenGrievance={openGrievance}
+            onOpenGrievance={
+              openGrievance
+            }
           />
         ) : null}
 
         {viewMode === "analytics" ? (
-          <AnalyticsView analytics={analytics} />
+          <AnalyticsView
+            analytics={analytics}
+          />
         ) : null}
       </section>
     </main>
@@ -494,7 +516,9 @@ function Sidebar({
   readonly activeView: ViewMode;
   readonly mobileOpen: boolean;
   readonly onClose: () => void;
-  readonly onViewChange: (view: ViewMode) => void;
+  readonly onViewChange: (
+    view: ViewMode,
+  ) => void;
 }) {
   return (
     <>
@@ -518,13 +542,16 @@ function Sidebar({
         <div className="flex h-full flex-col px-4 py-5">
           <button
             className="mb-7 flex items-center gap-3 px-2 text-left"
-            onClick={() => onViewChange("overview")}
+            onClick={() =>
+              onViewChange("overview")
+            }
             type="button"
           >
             <div className="relative flex size-10 items-center justify-center rounded-[13px] bg-[#5146e5] text-white shadow-[0_7px_16px_rgba(81,70,229,0.24)]">
               <span className="text-sm font-bold">
                 R
               </span>
+
               <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-[#fcfbf8] bg-[#f97362]" />
             </div>
 
@@ -532,6 +559,7 @@ function Sidebar({
               <div className="text-[16px] font-semibold">
                 Resolvia
               </div>
+
               <div className="text-[11px] uppercase tracking-[0.15em] text-[#938d99]">
                 Student Affairs AI
               </div>
@@ -548,6 +576,7 @@ function Sidebar({
                 <div className="text-xs font-semibold">
                   Demo institution
                 </div>
+
                 <div className="truncate text-[11px] text-[#958e9b]">
                   Autonomous resolution workspace
                 </div>
@@ -562,7 +591,8 @@ function Sidebar({
           <nav className="space-y-1">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const active = activeView === item.id;
+              const active =
+                activeView === item.id;
 
               return (
                 <button
@@ -579,9 +609,12 @@ function Sidebar({
                   type="button"
                 >
                   <Icon className="size-[17px]" />
-                  <span>{item.label}</span>
+                  <span>
+                    {item.label}
+                  </span>
 
-                  {item.id === "assistant" ? (
+                  {item.id ===
+                  "assistant" ? (
                     <span className="ml-auto size-1.5 rounded-full bg-[#1fa774]" />
                   ) : null}
                 </button>
@@ -598,8 +631,15 @@ function Sidebar({
               icon={ClipboardListIcon}
               label="Grievances"
               count={grievances.length}
-              active={activeView === "grievances"}
-              onClick={() => onViewChange("grievances")}
+              active={
+                activeView ===
+                "grievances"
+              }
+              onClick={() =>
+                onViewChange(
+                  "grievances",
+                )
+              }
             />
 
             <SidebarOperation
@@ -608,12 +648,19 @@ function Sidebar({
               count={
                 new Set(
                   grievances.map(
-                    (item) => item.studentId,
+                    (item) =>
+                      item.studentId,
                   ),
                 ).size
               }
-              active={activeView === "students"}
-              onClick={() => onViewChange("students")}
+              active={
+                activeView === "students"
+              }
+              onClick={() =>
+                onViewChange(
+                  "students",
+                )
+              }
             />
 
             <SidebarOperation
@@ -621,18 +668,28 @@ function Sidebar({
               label="Escalations"
               count={escalationsCount()}
               alert
-              active={activeView === "escalations"}
+              active={
+                activeView ===
+                "escalations"
+              }
               onClick={() =>
-                onViewChange("escalations")
+                onViewChange(
+                  "escalations",
+                )
               }
             />
 
             <SidebarOperation
               icon={SearchIcon}
               label="Analytics"
-              active={activeView === "analytics"}
+              active={
+                activeView ===
+                "analytics"
+              }
               onClick={() =>
-                onViewChange("analytics")
+                onViewChange(
+                  "analytics",
+                )
               }
             />
           </nav>
@@ -655,7 +712,9 @@ function Sidebar({
               </div>
 
               <div className="flex items-center justify-between text-[10px] text-[#918a95]">
-                <span>Resolution engine</span>
+                <span>
+                  Resolution engine
+                </span>
                 <span>92%</span>
               </div>
             </div>
@@ -669,6 +728,7 @@ function Sidebar({
                 <div className="truncate text-xs font-semibold">
                   Student Affairs
                 </div>
+
                 <div className="text-[10px] text-[#938d98]">
                   Administrator workspace
                 </div>
@@ -708,6 +768,7 @@ function SidebarOperation({
       type="button"
     >
       <Icon className="size-[17px]" />
+
       <span>{label}</span>
 
       {count !== undefined ? (
@@ -735,9 +796,14 @@ function TopBar({
   readonly activeView: ViewMode;
   readonly canStartNewChat: boolean;
   readonly onOpenNav: () => void;
-  readonly onViewChange: (view: ViewMode) => void;
+  readonly onViewChange: (
+    view: ViewMode,
+  ) => void;
 }) {
-  const titles: Record<ViewMode, string> = {
+  const titles: Record<
+    ViewMode,
+    string
+  > = {
     overview: "Institution overview",
     assistant: "Resolution command center",
     grievances: "Grievance management",
@@ -763,7 +829,8 @@ function TopBar({
 
       <div className="min-w-0">
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a099a4]">
-          Student Affairs / AI Operations
+          Student Affairs /
+          AI Operations
         </div>
 
         <div className="truncate text-[17px] font-semibold tracking-[-0.025em]">
@@ -777,11 +844,14 @@ function TopBar({
           Live demo environment
         </div>
 
-        {activeView !== "assistant" ? (
+        {activeView !==
+        "assistant" ? (
           <Button
             className="hidden rounded-full border-[#ddd7cf] bg-white text-[#58515f] shadow-none hover:bg-[#f3f0ea] sm:inline-flex"
             onClick={() =>
-              onViewChange("assistant")
+              onViewChange(
+                "assistant",
+              )
             }
             size="sm"
             type="button"
@@ -797,12 +867,15 @@ function TopBar({
             aria-label="Start a new chat"
             className="rounded-full bg-[#5146e5] px-3.5 text-white shadow-[0_6px_16px_rgba(81,70,229,0.18)] hover:bg-[#463bd0]"
             onClick={() =>
-              window.location.assign("/s")
+              window.location.assign(
+                "/s",
+              )
             }
             size="sm"
             type="button"
           >
             <PlusIcon className="size-4" />
+
             <span className="hidden sm:inline">
               New investigation
             </span>
@@ -828,14 +901,14 @@ function Overview({
   readonly onOpenEscalations: () => void;
   readonly onSendPrompt: (
     prompt: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_380px]">
           <section className="relative overflow-hidden rounded-[24px] border border-[#ddd7cf] bg-white p-6 shadow-[0_10px_36px_rgba(42,35,51,0.05)] sm:p-8">
-            <div className="absolute -right-20 -top-24 size-64 rounded-full bg-[#eeecff] blur-3xl" />
+            <div className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full bg-[#eeecff] blur-3xl" />
 
             <div className="relative max-w-2xl">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#ddd8ff] bg-[#f5f3ff] px-3 py-1.5 text-[11px] font-semibold text-[#5146e5]">
@@ -848,8 +921,9 @@ function Overview({
               </h1>
 
               <p className="mt-4 max-w-xl text-sm leading-6 text-[#756e7a] sm:text-[15px]">
-                Investigate cases, identify risk, understand
-                policy, route complaints, and surface
+                Investigate cases, identify risk,
+                understand policy, route
+                complaints, and surface
                 institutional patterns.
               </p>
 
@@ -865,7 +939,9 @@ function Overview({
 
                 <Button
                   className="rounded-full border-[#ddd7cf] bg-white px-5 text-[#5f5866] shadow-none hover:bg-[#f4f1eb]"
-                  onClick={onOpenGrievances}
+                  onClick={
+                    onOpenGrievances
+                  }
                   type="button"
                   variant="outline"
                 >
@@ -878,14 +954,17 @@ function Overview({
                   label="Open"
                   value={analytics.open}
                 />
+
                 <MiniStat
                   label="Overdue"
                   value={analytics.overdue}
                 />
+
                 <MiniStat
                   label="Escalations"
                   value={analytics.escalations}
                 />
+
                 <MiniStat
                   label="Resolved"
                   value={analytics.resolved}
@@ -912,44 +991,50 @@ function Overview({
             </div>
 
             <div className="mt-5 space-y-2.5">
-              {attentionItems.map((item) => (
-                <button
-                  className="w-full rounded-[13px] border border-white/8 bg-white/[0.06] p-3.5 text-left transition hover:bg-white/[0.09]"
-                  key={item.id}
-                  onClick={() =>
-                    onSendPrompt(
-                      `Investigate ${item.id} and explain its current risk, SLA status, and recommended action.`,
-                    )
-                  }
-                  type="button"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[10px] text-white/45">
-                      {item.id}
-                    </span>
+              {attentionItems.map(
+                (item) => (
+                  <button
+                    className="w-full rounded-[13px] border border-white/8 bg-white/[0.06] p-3.5 text-left transition hover:bg-white/[0.09]"
+                    key={item.id}
+                    onClick={() =>
+                      onSendPrompt(
+                        `Investigate ${item.id} and explain its current risk, SLA status, and recommended action.`,
+                      )
+                    }
+                    type="button"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-mono text-[10px] text-white/45">
+                        {item.id}
+                      </span>
 
-                    <span className="rounded-full bg-[#f97362]/15 px-2 py-0.5 text-[9px] font-semibold text-[#ffad9f]">
-                      {item.priority}
-                    </span>
-                  </div>
+                      <span className="rounded-full bg-[#f97362]/15 px-2 py-0.5 text-[9px] font-semibold text-[#ffad9f]">
+                        {item.priority}
+                      </span>
+                    </div>
 
-                  <div className="mt-1.5 text-xs font-semibold">
-                    {item.title}
-                  </div>
+                    <div className="mt-1.5 text-xs font-semibold">
+                      {item.title}
+                    </div>
 
-                  <div className="mt-1 text-[10px] text-white/45">
-                    {item.meta} · {item.sla}
-                  </div>
-                </button>
-              ))}
+                    <div className="mt-1 text-[10px] text-white/45">
+                      {item.meta} ·{" "}
+                      {item.sla}
+                    </div>
+                  </button>
+                ),
+              )}
             </div>
 
             <button
               className="mt-4 text-[11px] font-semibold text-[#b9b4ff] hover:text-white"
-              onClick={onOpenEscalations}
+              onClick={
+                onOpenEscalations
+              }
               type="button"
             >
-              Open complete escalation queue →
+              Open complete escalation
+              queue →
             </button>
           </section>
         </div>
@@ -970,6 +1055,7 @@ function MiniStat({
       <div className="text-[10px] uppercase tracking-[0.12em] text-[#9b949f]">
         {label}
       </div>
+
       <div className="mt-1 text-xl font-semibold">
         {value}
       </div>
@@ -984,7 +1070,7 @@ function GrievancesView({
   readonly onOpenAssistant: () => void;
   readonly onOpenGrievance: (
     grievanceId: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <DataPage
@@ -1004,71 +1090,89 @@ function GrievancesView({
         </Button>
 
         <span className="rounded-full border border-[#e1dcd4] bg-white px-3 py-1.5 text-[11px] text-[#77707c]">
-          {grievances.length} total cases
+          {grievances.length} total
+          cases
         </span>
       </div>
 
       <div className="overflow-hidden rounded-[20px] border border-[#dfdad2] bg-white">
         <div className="grid grid-cols-[1fr_auto] border-b border-[#eee9e2] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#a099a4] sm:grid-cols-[105px_1.5fr_130px_100px_100px_80px]">
           <span>Case</span>
-          <span className="hidden sm:block">Complaint</span>
-          <span className="hidden sm:block">Department</span>
-          <span className="hidden sm:block">Status</span>
-          <span className="hidden sm:block">Priority</span>
-          <span className="text-right">View</span>
+          <span className="hidden sm:block">
+            Complaint
+          </span>
+          <span className="hidden sm:block">
+            Department
+          </span>
+          <span className="hidden sm:block">
+            Status
+          </span>
+          <span className="hidden sm:block">
+            Priority
+          </span>
+          <span className="text-right">
+            View
+          </span>
         </div>
 
         <div className="divide-y divide-[#eee9e2]">
-          {grievances.map((item) => (
-            <button
-              key={item.grievanceId}
-              className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 text-left transition hover:bg-[#faf9f6] sm:grid-cols-[105px_1.5fr_130px_100px_100px_80px]"
-              onClick={() =>
-                onOpenGrievance(item.grievanceId)
-              }
-              type="button"
-            >
-              <div>
-                <div className="font-mono text-[10px] font-semibold text-[#716a76]">
-                  {item.grievanceId}
+          {grievances.map(
+            (item) => (
+              <button
+                key={item.grievanceId}
+                className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 text-left transition hover:bg-[#faf9f6] sm:grid-cols-[105px_1.5fr_130px_100px_100px_80px]"
+                onClick={() =>
+                  onOpenGrievance(
+                    item.grievanceId,
+                  )
+                }
+                type="button"
+              >
+                <div>
+                  <div className="font-mono text-[10px] font-semibold text-[#716a76]">
+                    {item.grievanceId}
+                  </div>
+
+                  <div className="mt-1 text-[10px] text-[#a098a4] sm:hidden">
+                    {item.department}
+                  </div>
                 </div>
 
-                <div className="mt-1 text-[10px] text-[#a098a4] sm:hidden">
+                <div className="hidden min-w-0 sm:block">
+                  <div className="truncate text-xs font-semibold">
+                    {item.title}
+                  </div>
+
+                  <div className="mt-1 truncate text-[10px] text-[#958e9a]">
+                    {item.category}
+                  </div>
+                </div>
+
+                <div className="hidden text-[11px] text-[#706977] sm:block">
                   {item.department}
                 </div>
-              </div>
 
-              <div className="hidden min-w-0 sm:block">
-                <div className="truncate text-xs font-semibold">
-                  {item.title}
+                <div className="hidden sm:block">
+                  <StatusBadge
+                    status={item.status}
+                  />
                 </div>
-                <div className="mt-1 truncate text-[10px] text-[#958e9a]">
-                  {item.category}
+
+                <div className="hidden sm:block">
+                  <PriorityBadge
+                    priority={item.priority}
+                  />
                 </div>
-              </div>
 
-              <div className="hidden text-[11px] text-[#706977] sm:block">
-                {item.department}
-              </div>
-
-              <div className="hidden sm:block">
-                <StatusBadge status={item.status} />
-              </div>
-
-              <div className="hidden sm:block">
-                <PriorityBadge
-                  priority={item.priority}
-                />
-              </div>
-
-              <div className="text-right">
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#5146e5]">
-                  Open
-                  <ArrowUpRightIcon className="size-3" />
-                </span>
-              </div>
-            </button>
-          ))}
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#5146e5]">
+                    Open
+                    <ArrowUpRightIcon className="size-3" />
+                  </span>
+                </div>
+              </button>
+            ),
+          )}
         </div>
       </div>
     </DataPage>
@@ -1087,7 +1191,7 @@ function StudentsView({
   }[];
   readonly onOpenGrievance: (
     grievanceId: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <DataPage
@@ -1096,56 +1200,74 @@ function StudentsView({
       description="Students represented in the grievance environment and their current case activity."
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {students.map((student) => {
-          const latest = grievances
-            .filter(
-              (item) =>
-                item.studentId === student.studentId,
-            )
-            .sort(
-              (a, b) =>
-                new Date(b.submittedAt).getTime() -
-                new Date(a.submittedAt).getTime(),
-            )[0];
+        {students.map(
+          (student) => {
+            const latest =
+              grievances
+                .filter(
+                  (item) =>
+                    item.studentId ===
+                    student.studentId,
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(
+                      b.submittedAt,
+                    ).getTime() -
+                    new Date(
+                      a.submittedAt,
+                    ).getTime(),
+                )[0];
 
-          return (
-            <button
-              key={student.studentId}
-              className="rounded-[18px] border border-[#e2ddd5] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-[#cec8ff] hover:shadow-[0_9px_24px_rgba(81,70,229,0.07)]"
-              onClick={() =>
-                latest &&
-                onOpenGrievance(latest.grievanceId)
-              }
-              type="button"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-[#201d26] text-[11px] font-semibold text-white">
-                  {initials(student.studentName)}
+            return (
+              <button
+                key={student.studentId}
+                className="rounded-[18px] border border-[#e2ddd5] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-[#cec8ff] hover:shadow-[0_9px_24px_rgba(81,70,229,0.07)]"
+                onClick={() =>
+                  latest &&
+                  onOpenGrievance(
+                    latest.grievanceId,
+                  )
+                }
+                type="button"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-[#201d26] text-[11px] font-semibold text-white">
+                    {initials(
+                      student.studentName,
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold">
+                      {student.studentName}
+                    </div>
+
+                    <div className="font-mono text-[10px] text-[#958e9a]">
+                      {student.studentId}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold">
-                    {student.studentName}
-                  </div>
-                  <div className="font-mono text-[10px] text-[#958e9a]">
-                    {student.studentId}
-                  </div>
-                </div>
-              </div>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <MiniStat
+                    label="Cases"
+                    value={
+                      student.grievances
+                    }
+                  />
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <MiniStat
-                  label="Cases"
-                  value={student.grievances}
-                />
-                <MiniStat
-                  label="Open"
-                  value={student.open}
-                />
-              </div>
-            </button>
-          );
-        })}
+                  <MiniStat
+                    label="Open"
+                    value={
+                      student.open
+                    }
+                  />
+                </div>
+              </button>
+            );
+          },
+        )}
       </div>
     </DataPage>
   );
@@ -1158,7 +1280,7 @@ function EscalationsView({
   readonly cases: typeof grievances;
   readonly onOpenGrievance: (
     grievanceId: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <DataPage
@@ -1173,56 +1295,67 @@ function EscalationsView({
         </div>
 
         <p className="mt-1.5 text-[11px] leading-5 text-[#966c66]">
-          Resolvia surfaces cases for human review using
-          severity, SLA, sensitivity, and impact signals.
+          Resolvia surfaces cases
+          for human review using
+          severity, SLA, sensitivity,
+          and impact signals.
         </p>
       </div>
 
       <div className="space-y-3">
-        {cases.map((item) => (
-          <button
-            key={item.grievanceId}
-            className="w-full rounded-[18px] border border-[#e1dbd3] bg-white p-4 text-left transition hover:border-[#cec8ff] hover:shadow-[0_9px_24px_rgba(81,70,229,0.07)]"
-            onClick={() =>
-              onOpenGrievance(item.grievanceId)
-            }
-            type="button"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-[10px] font-semibold text-[#827b88]">
-                {item.grievanceId}
-              </span>
-
-              <PriorityBadge
-                priority={item.priority}
-              />
-
-              {isOverdue(item) ? (
-                <span className="rounded-full bg-[#fff0ec] px-2 py-0.5 text-[9px] font-semibold text-[#d85d4f]">
-                  OVERDUE
+        {cases.map(
+          (item) => (
+            <button
+              key={item.grievanceId}
+              className="w-full rounded-[18px] border border-[#e1dbd3] bg-white p-4 text-left transition hover:border-[#cec8ff] hover:shadow-[0_9px_24px_rgba(81,70,229,0.07)]"
+              onClick={() =>
+                onOpenGrievance(
+                  item.grievanceId,
+                )
+              }
+              type="button"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-[10px] font-semibold text-[#827b88]">
+                  {item.grievanceId}
                 </span>
-              ) : null}
 
-              {item.sensitive ? (
-                <span className="rounded-full bg-[#f0efff] px-2 py-0.5 text-[9px] font-semibold text-[#5146e5]">
-                  HUMAN REVIEW
-                </span>
-              ) : null}
-            </div>
+                <PriorityBadge
+                  priority={item.priority}
+                />
 
-            <div className="mt-2 text-sm font-semibold">
-              {item.title}
-            </div>
+                {isOverdue(item) ? (
+                  <span className="rounded-full bg-[#fff0ec] px-2 py-0.5 text-[9px] font-semibold text-[#d85d4f]">
+                    OVERDUE
+                  </span>
+                ) : null}
 
-            <div className="mt-1 text-[11px] text-[#958e9a]">
-              {item.department} · affects{" "}
-              {item.affectedStudentCount} student
-              {item.affectedStudentCount === 1
-                ? ""
-                : "s"}
-            </div>
-          </button>
-        ))}
+                {item.sensitive ? (
+                  <span className="rounded-full bg-[#f0efff] px-2 py-0.5 text-[9px] font-semibold text-[#5146e5]">
+                    HUMAN REVIEW
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="mt-2 text-sm font-semibold">
+                {item.title}
+              </div>
+
+              <div className="mt-1 text-[11px] text-[#958e9a]">
+                {item.department} ·
+                affects{" "}
+                {
+                  item.affectedStudentCount
+                }{" "}
+                student
+                {item.affectedStudentCount ===
+                1
+                  ? ""
+                  : "s"}
+              </div>
+            </button>
+          ),
+        )}
       </div>
     </DataPage>
   );
@@ -1246,18 +1379,23 @@ function AnalyticsView({
           label="Total grievances"
           value={analytics.total}
         />
+
         <BigMetric
           label="Open"
           value={analytics.open}
         />
+
         <BigMetric
           label="Overdue"
           value={analytics.overdue}
           danger
         />
+
         <BigMetric
           label="Resolved"
-          value={analytics.resolved}
+          value={
+            analytics.resolved
+          }
         />
       </div>
 
@@ -1266,8 +1404,10 @@ function AnalyticsView({
           <div className="text-sm font-semibold">
             Department workload
           </div>
+
           <div className="mt-1 text-[11px] text-[#958e9a]">
-            Complaint volume and current open workload.
+            Complaint volume and
+            current open workload.
           </div>
         </div>
 
@@ -1276,11 +1416,15 @@ function AnalyticsView({
             (department) => (
               <div
                 className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-5 py-4 sm:grid-cols-[1fr_100px_100px]"
-                key={department.department}
+                key={
+                  department.department
+                }
               >
                 <div>
                   <div className="text-xs font-semibold">
-                    {department.department}
+                    {
+                      department.department
+                    }
                   </div>
 
                   <div className="mt-1 h-1.5 w-full max-w-[320px] overflow-hidden rounded-full bg-[#eeebe5]">
@@ -1293,8 +1437,10 @@ function AnalyticsView({
                             (department.complaints /
                               Math.max(
                                 1,
-                                analytics.departments[0]
-                                  ?.complaints ?? 1,
+                                analytics
+                                  .departments[0]
+                                  ?.complaints ??
+                                  1,
                               )) *
                               100,
                           ),
@@ -1306,8 +1452,11 @@ function AnalyticsView({
 
                 <div className="text-right">
                   <div className="text-sm font-semibold">
-                    {department.complaints}
+                    {
+                      department.complaints
+                    }
                   </div>
+
                   <div className="text-[10px] text-[#a099a4]">
                     complaints
                   </div>
@@ -1317,6 +1466,7 @@ function AnalyticsView({
                   <div className="text-sm font-semibold text-[#5146e5]">
                     {department.open}
                   </div>
+
                   <div className="text-[10px] text-[#a099a4]">
                     open
                   </div>
@@ -1385,10 +1535,13 @@ function BigMetric({
       <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9d96a2]">
         {label}
       </div>
+
       <div
         className={cn(
           "mt-2 text-3xl font-semibold tracking-[-0.05em]",
-          danger ? "text-[#d85d4f]" : "",
+          danger
+            ? "text-[#d85d4f]"
+            : "",
         )}
       >
         {value}
@@ -1418,7 +1571,9 @@ function AssistantWorkspace({
   readonly showConversationLayout: boolean;
   readonly showPendingThinking: boolean;
   readonly errorMessage?: string;
-  readonly agent: ReturnType<typeof useEveAgent>;
+  readonly agent: ReturnType<
+    typeof useEveAgent
+  >;
   readonly sessionId?: string;
   readonly activeSessionId?: string;
   readonly isBusy: boolean;
@@ -1426,34 +1581,40 @@ function AssistantWorkspace({
   readonly onCancellationReset: () => void;
   readonly onSendPrompt: (
     prompt: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(81,70,229,0.06),transparent_30%)]" />
+      {/* Decorative layer — NEVER intercept clicks */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(81,70,229,0.06),transparent_30%)]" />
 
-      <div className="relative flex h-full min-h-0">
+      <div className="relative z-10 flex h-full min-h-0">
         <section className="flex min-w-0 flex-1 flex-col">
           {!showConversationLayout ? (
             <AssistantEmptyState
-              onSendPrompt={onSendPrompt}
+              onSendPrompt={
+                onSendPrompt
+              }
             />
           ) : (
             <Conversation
               className="min-h-0 flex-1"
               initial={
-                sessionId === undefined
+                sessionId ===
+                undefined
                   ? undefined
                   : false
               }
               resize={
-                activeSessionId === undefined
+                activeSessionId ===
+                undefined
                   ? "smooth"
                   : "instant"
               }
               scrollRestorationKey={
                 isEmpty ||
-                activeSessionId === undefined
+                activeSessionId ===
+                  undefined
                   ? undefined
                   : `eve:web-chat-scroll:${activeSessionId}`
               }
@@ -1462,7 +1623,10 @@ function AssistantWorkspace({
 
               <ConversationContent className="mx-auto w-full max-w-4xl gap-5 px-4 pb-40 pt-7 sm:px-6 lg:px-10">
                 {agent.data.messages.map(
-                  (message, index) =>
+                  (
+                    message,
+                    index,
+                  ) =>
                     showPendingThinking &&
                     isPendingAssistantShell &&
                     message.id ===
@@ -1475,15 +1639,22 @@ function AssistantWorkspace({
                           !isResuming
                         }
                         isStreaming={
-                          agent.status ===
+                          agent
+                            .status ===
                             "streaming" &&
                           index ===
-                            agent.data.messages
+                            agent
+                              .data
+                              .messages
                               .length -
                               1
                         }
-                        key={message.id}
-                        message={message}
+                        key={
+                          message.id
+                        }
+                        message={
+                          message
+                        }
                         onInputResponses={(
                           inputResponses,
                         ) => {
@@ -1503,7 +1674,9 @@ function AssistantWorkspace({
 
                 {errorMessage ? (
                   <ErrorMessage
-                    message={errorMessage}
+                    message={
+                      errorMessage
+                    }
                   />
                 ) : null}
               </ConversationContent>
@@ -1522,8 +1695,10 @@ function AssistantWorkspace({
           >
             {showConversationLayout ? (
               <div className="mb-2 text-center text-[10px] text-[#a29aa6]">
-                Resolvia reasons over grievance context,
-                policy, priority and routing evidence.
+                Resolvia reasons over
+                grievance context,
+                policy, priority and
+                routing evidence.
               </div>
             ) : null}
 
@@ -1533,7 +1708,9 @@ function AssistantWorkspace({
 
         <aside className="hidden w-[300px] shrink-0 border-l border-[#e7e2da] bg-[#fbfaf7] xl:block">
           <AssistantContextPanel
-            onSendPrompt={onSendPrompt}
+            onSendPrompt={
+              onSendPrompt
+            }
           />
         </aside>
       </div>
@@ -1546,7 +1723,7 @@ function AssistantEmptyState({
 }: {
   readonly onSendPrompt: (
     prompt: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1557,16 +1734,20 @@ function AssistantEmptyState({
           </div>
 
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.17em] text-[#8f8794]">
-            Autonomous grievance intelligence
+            Autonomous grievance
+            intelligence
           </div>
 
           <h1 className="text-4xl font-semibold tracking-[-0.055em] text-[#201d26] sm:text-5xl sm:leading-[1.02]">
-            What should Resolvia investigate?
+            What should Resolvia
+            investigate?
           </h1>
 
           <p className="mt-4 max-w-xl text-sm leading-6 text-[#77707c] sm:text-[15px]">
-            Select an investigation below. These are now
-            connected directly to the real Eve agent.
+            Select an investigation
+            below. Each action is
+            connected directly to the
+            live Eve agent.
           </p>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -1625,7 +1806,7 @@ function AssistantContextPanel({
 }: {
   readonly onSendPrompt: (
     prompt: string,
-  ) => Promise<void>;
+  ) => void;
 }) {
   return (
     <div className="flex h-full flex-col p-5">
@@ -1643,6 +1824,7 @@ function AssistantContextPanel({
             <div className="text-xs font-semibold">
               Resolution engine
             </div>
+
             <div className="text-[10px] text-[#948d99]">
               Ready to reason
             </div>
@@ -1654,14 +1836,17 @@ function AssistantContextPanel({
             icon={CheckCircle2Icon}
             label="Case retrieval"
           />
+
           <ContextStatus
             icon={CheckCircle2Icon}
             label="Policy search"
           />
+
           <ContextStatus
             icon={CheckCircle2Icon}
             label="Priority analysis"
           />
+
           <ContextStatus
             icon={CheckCircle2Icon}
             label="Department routing"
@@ -1718,8 +1903,10 @@ function AssistantContextPanel({
         </div>
 
         <p className="mt-2 text-[10px] leading-5 text-[#938c97]">
-          Sensitive conduct cases are surfaced for human
-          review. Resolvia does not make guilt findings.
+          Sensitive conduct cases
+          are surfaced for human
+          review. Resolvia does not
+          make guilt findings.
         </p>
       </div>
     </div>
@@ -1756,7 +1943,7 @@ function ContextPrompt({
 }) {
   return (
     <button
-      className="w-full rounded-[11px] border border-[#e6e1da] bg-white px-3 py-2.5 text-left text-[10px] leading-4 text-[#716a76] transition hover:border-[#d2cbff] hover:bg-[#f8f7ff] hover:text-[#5146e5]"
+      className="relative z-20 w-full rounded-[11px] border border-[#e6e1da] bg-white px-3 py-2.5 text-left text-[10px] leading-4 text-[#716a76] transition hover:border-[#d2cbff] hover:bg-[#f8f7ff] hover:text-[#5146e5]"
       onClick={onClick}
       type="button"
     >
@@ -1778,7 +1965,7 @@ function PromptSuggestion({
 }) {
   return (
     <button
-      className="group rounded-[17px] border border-[#e3ddd5] bg-white p-4 text-left shadow-[0_5px_18px_rgba(42,35,51,0.035)] transition hover:-translate-y-0.5 hover:border-[#cfc9ff] hover:shadow-[0_9px_24px_rgba(81,70,229,0.08)]"
+      className="relative z-20 group rounded-[17px] border border-[#e3ddd5] bg-white p-4 text-left shadow-[0_5px_18px_rgba(42,35,51,0.035)] transition hover:-translate-y-0.5 hover:border-[#cfc9ff] hover:shadow-[0_9px_24px_rgba(81,70,229,0.08)]"
       onClick={onClick}
       type="button"
     >
@@ -1823,7 +2010,8 @@ function PriorityBadge({
       ? "bg-[#fff0ec] text-[#d85d4f]"
       : priority === "High"
         ? "bg-[#fff6df] text-[#a56e0a]"
-        : priority === "Medium"
+        : priority ===
+            "Medium"
           ? "bg-[#f0efff] text-[#6660b3]"
           : "bg-[#edf7f2] text-[#27825f]";
 
@@ -1850,9 +2038,12 @@ function ComposerAction({
   readonly isResuming: boolean;
   readonly onCancel: () => void;
 }) {
-  const attachments = usePromptInputAttachments();
+  const attachments =
+    usePromptInputAttachments();
+
   const canSubmit =
-    hasInputText || attachments.files.length > 0;
+    hasInputText ||
+    attachments.files.length > 0;
 
   if (!isBusy || canSubmit) {
     return (
@@ -1881,7 +2072,10 @@ function ErrorMessage({
   readonly message: string;
 }) {
   return (
-    <Message className="max-w-full" from="assistant">
+    <Message
+      className="max-w-full"
+      from="assistant"
+    >
       <MessageContent>
         <div
           className="flex w-full items-start gap-3 rounded-[15px] border border-[#efc9c2] bg-[#fff5f2] px-4 py-3 text-sm"
@@ -1908,7 +2102,10 @@ function ErrorMessage({
 
 function PendingThinking() {
   return (
-    <Message aria-live="polite" from="assistant">
+    <Message
+      aria-live="polite"
+      from="assistant"
+    >
       <MessageContent>
         <div className="flex items-center gap-3 rounded-[15px] border border-[#e5dfd8] bg-white px-4 py-3 text-sm shadow-[0_4px_16px_rgba(42,35,51,0.035)]">
           <div className="flex size-8 items-center justify-center rounded-full bg-[#eeecff] text-[#5146e5]">
@@ -1922,7 +2119,8 @@ function PendingThinking() {
 
             <div className="mt-0.5 text-[11px] text-[#978f9b]">
               <Shimmer duration={1}>
-                Retrieving context and reasoning...
+                Retrieving context and
+                reasoning...
               </Shimmer>
             </div>
           </div>
@@ -1932,36 +2130,47 @@ function PendingThinking() {
   );
 }
 
-function toErrorMessage(error: unknown): string {
+function toErrorMessage(
+  error: unknown,
+): string {
   return error instanceof Error
     ? error.message
     : "Unable to cancel the response.";
 }
 
 function getLatestTurnFailure(
-  events: ReturnType<typeof useEveAgent>["events"],
+  events: ReturnType<
+    typeof useEveAgent
+  >["events"],
 ): string | undefined {
   for (
-    let index = events.length - 1;
+    let index =
+      events.length - 1;
     index >= 0;
     index -= 1
   ) {
     const event = events[index];
 
     if (event.type === "turn.failed") {
-      return event.data.code === "MODEL_CALL_FAILED"
+      return event.data.code ===
+        "MODEL_CALL_FAILED"
         ? "The AI model is temporarily unavailable. Please try again."
         : event.data.message;
     }
 
     if (
-      event.type === "turn.completed" ||
-      event.type === "turn.cancelled"
+      event.type ===
+        "turn.completed" ||
+      event.type ===
+        "turn.cancelled"
     ) {
       return undefined;
     }
 
-    if (event.type === "message.received") {
+    if (
+      event.type ===
+      "message.received"
+    ) {
       return undefined;
     }
   }
@@ -1969,12 +2178,16 @@ function getLatestTurnFailure(
   return undefined;
 }
 
-function initials(name: string) {
+function initials(
+  name: string,
+) {
   return name
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0])
+    .map(
+      (part) => part[0],
+    )
     .join("")
     .toUpperCase();
 }
@@ -1982,80 +2195,106 @@ function initials(name: string) {
 function escalationsCount() {
   return grievances.filter(
     (item) =>
-      item.priority === "Critical" ||
+      item.priority ===
+        "Critical" ||
       item.sensitive ||
       isOverdue(item),
   ).length;
 }
 
-function createAnalytics() {
-  const open = grievances.filter(
-    (item) =>
-      item.status !== "Resolved" &&
-      item.status !== "Closed",
-  );
+function createAnalytics(
+  overdueCount: number,
+  escalationCount: number,
+) {
+  const open =
+    grievances.filter(
+      (item) =>
+        item.status !==
+          "Resolved" &&
+        item.status !==
+          "Closed",
+    );
 
-  const resolved = grievances.filter(
-    (item) =>
-      item.status === "Resolved" ||
-      item.status === "Closed",
-  );
+  const resolved =
+    grievances.filter(
+      (item) =>
+        item.status ===
+          "Resolved" ||
+        item.status ===
+          "Closed",
+    );
 
-  const overdue = grievances.filter(isOverdue);
-
-  const departmentMap = new Map<
-    string,
-    {
-      department: string;
-      complaints: number;
-      open: number;
-      resolved: number;
-    }
-  >();
+  const departmentMap =
+    new Map<
+      string,
+      {
+        department: string;
+        complaints: number;
+        open: number;
+        resolved: number;
+      }
+    >();
 
   for (const item of grievances) {
-    const current = departmentMap.get(item.department) ?? {
-      department: item.department,
-      complaints: 0,
-      open: 0,
-      resolved: 0,
-    };
+    const current =
+      departmentMap.get(
+        item.department,
+      ) ?? {
+        department:
+          item.department,
+        complaints: 0,
+        open: 0,
+        resolved: 0,
+      };
 
     current.complaints += 1;
 
     if (
-      item.status === "Resolved" ||
-      item.status === "Closed"
+      item.status ===
+        "Resolved" ||
+      item.status ===
+        "Closed"
     ) {
       current.resolved += 1;
     } else {
       current.open += 1;
     }
 
-    departmentMap.set(item.department, current);
+    departmentMap.set(
+      item.department,
+      current,
+    );
   }
 
   return {
     total: grievances.length,
     open: open.length,
-    resolved: resolved.length,
-    overdue: overdue.length,
-    escalations: escalationsCount(),
+    resolved:
+      resolved.length,
+    overdue: overdueCount,
+    escalations:
+      escalationCount,
     averageResolutionHours:
       resolved.length === 0
         ? 0
         : Math.round(
             resolved.reduce(
               (sum, item) =>
-                sum + calculateWaitingHours(item),
+                sum +
+                calculateWaitingHours(
+                  item,
+                ),
               0,
-            ) / resolved.length,
+            ) /
+              resolved.length,
           ),
-    departments: Array.from(
-      departmentMap.values(),
-    ).sort(
-      (a, b) =>
-        b.complaints - a.complaints,
-    ),
+    departments:
+      Array.from(
+        departmentMap.values(),
+      ).sort(
+        (a, b) =>
+          b.complaints -
+          a.complaints,
+      ),
   };
 }
