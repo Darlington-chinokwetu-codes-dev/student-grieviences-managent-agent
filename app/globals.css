@@ -4,77 +4,126 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+
   --color-destructive: var(--destructive);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+
+  --font-sans:
+    "Geist",
+    "Geist Fallback",
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+
+  --font-mono:
+    "Geist Mono",
+    "Geist Mono Fallback",
+    ui-monospace,
+    monospace;
 }
+
+/* =========================================================
+   RESOLVIA — LIGHT EDITORIAL / UNIVERSITY OPERATIONS THEME
+   ========================================================= */
 
 :root {
   color-scheme: light;
-  /* Soft neutral page with white elevated surfaces so cards/composer pop. */
-  --background: oklch(0.971 0 0);
-  --foreground: oklch(0.16 0 0);
+
+  /* Page */
+  --background: oklch(0.975 0.008 85);
+  --foreground: oklch(0.185 0.015 285);
+
+  /* Surfaces */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0 0);
+  --card-foreground: oklch(0.185 0.015 285);
+
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0 0);
-  --primary: oklch(0.19 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.94 0 0);
-  --secondary-foreground: oklch(0.19 0 0);
-  --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.94 0 0);
-  --accent-foreground: oklch(0.19 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.916 0 0);
-  --input: oklch(0.916 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
+  --popover-foreground: oklch(0.185 0.015 285);
+
+  /* Brand — Indigo */
+  --primary: oklch(0.52 0.22 278);
+  --primary-foreground: oklch(0.99 0.002 285);
+
+  /* Soft lavender secondary */
+  --secondary: oklch(0.94 0.025 282);
+  --secondary-foreground: oklch(0.34 0.12 278);
+
+  /* Quiet surfaces */
+  --muted: oklch(0.95 0.008 85);
+  --muted-foreground: oklch(0.52 0.025 285);
+
+  /* Indigo accent */
+  --accent: oklch(0.94 0.025 282);
+  --accent-foreground: oklch(0.34 0.12 278);
+
+  /* Coral / urgency */
+  --destructive: oklch(0.61 0.20 26);
+
+  /* Borders / inputs */
+  --border: oklch(0.90 0.012 85);
+  --input: oklch(0.91 0.012 85);
+  --ring: oklch(0.52 0.22 278);
+
+  --radius: 0.8rem;
+
+  /* Resolvia semantic colors */
+  --resolv-indigo: oklch(0.52 0.22 278);
+  --resolv-indigo-soft: oklch(0.95 0.025 282);
+
+  --resolv-coral: oklch(0.67 0.18 27);
+  --resolv-coral-soft: oklch(0.96 0.028 27);
+
+  --resolv-amber: oklch(0.72 0.15 78);
+  --resolv-amber-soft: oklch(0.965 0.028 78);
+
+  --resolv-green: oklch(0.59 0.15 160);
+  --resolv-green-soft: oklch(0.95 0.03 160);
+
+  --resolv-ink: oklch(0.18 0.015 285);
+  --resolv-slate: oklch(0.47 0.025 285);
+  --resolv-soft-ink: oklch(0.61 0.02 285);
+
+  --resolv-page: oklch(0.975 0.008 85);
+  --resolv-surface: oklch(1 0 0);
+
+  --resolv-shadow-sm:
+    0 1px 2px rgb(20 20 40 / 0.04),
+    0 4px 16px rgb(20 20 40 / 0.035);
+
+  --resolv-shadow-md:
+    0 8px 30px rgb(20 20 40 / 0.055),
+    0 2px 8px rgb(20 20 40 / 0.035);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-  }
-}
+/* =========================================================
+   BASE
+   ========================================================= */
 
 * {
   border-color: var(--border);
@@ -82,19 +131,158 @@
 
 html {
   height: 100%;
+  background: var(--background);
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  text-rendering: optimizeLegibility;
 }
 
 body {
   min-height: 100%;
   margin: 0;
-  background: var(--background);
+
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgb(81 70 229 / 0.035),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 95% 10%,
+      rgb(249 115 98 / 0.025),
+      transparent 24%
+    ),
+    var(--background);
+
+  color: var(--foreground);
+
   font-family: var(--font-sans);
 }
 
+/* =========================================================
+   FORM ELEMENTS
+   ========================================================= */
+
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+::selection {
+  background: rgb(81 70 229 / 0.14);
+  color: var(--foreground);
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 90 120 / 0.18) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(100 90 120 / 0.18);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 90 120 / 0.28);
+}
+
+/* =========================================================
+   RESOLVIA UTILITY CLASSES
+   ========================================================= */
+
+.resolvia-page {
+  background: var(--resolv-page);
+  color: var(--resolv-ink);
+}
+
+.resolvia-surface {
+  background: var(--resolv-surface);
+  box-shadow: var(--resolv-shadow-sm);
+}
+
+.resolvia-surface-elevated {
+  background: var(--resolv-surface);
+  box-shadow: var(--resolv-shadow-md);
+}
+
+.resolvia-border {
+  border: 1px solid var(--border);
+}
+
+.resolvia-brand {
+  color: var(--resolv-indigo);
+}
+
+.resolvia-brand-soft {
+  background: var(--resolv-indigo-soft);
+  color: var(--resolv-indigo);
+}
+
+.resolvia-critical {
+  background: var(--resolv-coral-soft);
+  color: var(--resolv-coral);
+}
+
+.resolvia-warning {
+  background: var(--resolv-amber-soft);
+  color: var(--resolv-amber);
+}
+
+.resolvia-success {
+  background: var(--resolv-green-soft);
+  color: var(--resolv-green);
+}
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+:focus-visible {
+  outline: 2px solid var(--resolv-indigo);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  body {
+    background: var(--resolv-page);
+  }
 }
